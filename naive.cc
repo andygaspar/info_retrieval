@@ -24,9 +24,11 @@ using std::string;
 using std::vector;
 
 //enviromental variables
-vector<int> index_ptr;
-char* chunk=nullptr;
-string file_name="../doc/doc_test_small.txt";
+vector<int> ter_index_ptr;
+vector<int> pos_index_ptr;
+char* text_ptr=nullptr;
+string text_file_name="../doc/doc_test_small.txt";
+
 
 string terms_list="terms_list.csv";
 string posting_list="posting_list.csv";
@@ -105,7 +107,7 @@ vector<int> make_term_list_TEMP (string file_name){
                 save_term_toDisk<<term<<' ';
                 save_posting_toDisk<<doc_ID<<endl;
 
-                index_ptr.push_back(disk_index); //save term's beginnig index
+                ter_index_ptr.push_back(disk_index); //save term's beginnig index
                 disk_index+=term.length()+1;
             }
 
@@ -118,61 +120,74 @@ vector<int> make_term_list_TEMP (string file_name){
 
     g.close();
 
-    return index_ptr;
+    return ter_index_ptr;
 } 
 
 
 
 string get_term_from_disk(int i){
     string term="";
-    while(chunk[i]!=' '){
-        term+=chunk[i];
+    while(text_ptr[i]!=' '){
+        term+=text_ptr[i];
         i++;
     }
     return term;
 }
 
-size_t getFilesize() {
+size_t getFilesize(string &file_name) {
     struct stat st;
     stat(file_name.c_str(), &st);
     return st.st_size;
 }
 
-char * set_disk_ptr() {
-    size_t filesize = getFilesize();
+
+template<class T>
+T * set_disk_ptr(string &file_name) {
+    size_t filesize = getFilesize(file_name);
     int fd = open(terms_list_TEMP.c_str(), O_RDONLY, 0);
     assert(fd != -1);
     //Execute mmap
     void* mmappedData = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
     assert(mmappedData != MAP_FAILED);
 
-   return reinterpret_cast<char*>(mmap(NULL, filesize, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0));
+   return reinterpret_cast<T*>(mmap(NULL, filesize, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0));
   }
-// Driver program to test above functions 
-int main() 
-{ 
-  
-    index_ptr=make_term_list_TEMP(file_name);
-     
-    chunk=set_disk_ptr();
 
-    quick_sort(index_ptr);
+
+
+int main() 
+{   remove(terms_list.c_str());
+    remove(posting_list.c_str());
+  
+    ter_index_ptr=make_term_list_TEMP(text_file_name);
+     
+    text_ptr=set_disk_ptr<char>(text_file_name);
+
+    quick_sort(ter_index_ptr);
  
 
     std::ofstream ter_list(terms_list);
     std::ofstream pos_list(posting_list);
+
+
+
     string current="";
     string prev="";
 
-    //writing 
-    ter_list<<get_term_from_disk(index_ptr[0])<<endl;
+    ter_list<<get_term_from_disk(ter_index_ptr[0]);
+    pos_list<<"0"<<endl;
 
-    for(int i=1; i< index_ptr.size(); i++) {
-        current=get_term_from_disk(index_ptr[i]);
-        prev=get_term_from_disk(index_ptr[i-1]);
+    for(int i=1; i< ter_index_ptr.size(); i++) {
+        current=get_term_from_disk(ter_index_ptr[i]);
+        prev=get_term_from_disk(ter_index_ptr[i-1]);
 
-        if(current!=prev)
-            ter_list<<current<<endl;        
+        if(current!=prev){
+            ter_list<<endl<<current;
+            pos_list<<endl<<ter_index_ptr[i];
+        }
+
+        else {pos_list<<" "<<ter_index_ptr[i];}
+
     }
 
     remove(terms_list_TEMP.c_str());
