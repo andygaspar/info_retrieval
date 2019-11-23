@@ -43,12 +43,12 @@ string load_invalid_char(){
 // check validity of a term
 
 bool is_valid_term(string term){
+    //questa è da sistemare *****************************i caratteri che escude sono troppi!!!!!
     
+    if (term == "") return false;
+    for (int i=0; i<term.length(); i++)
+    if  (ispunct(term[i]) or isspace(term[i]) or !isalnum(term[i])) return false;
 
-    if (term == ""  or  ispunct(term[0]) or isspace(term[0])) return false;
-
-     
-    if (invalid_chars.find(term) != string::npos) return false;
     return true;
 }
 
@@ -57,7 +57,7 @@ bool is_valid_term(string term){
 
 string get_term(string line, short int& i){
     string term="";
-    std::locale loc;
+    //std::locale loc;
     while(!isspace(line[i]) and !ispunct(line[i]) and i<line.length()) {
         term += tolower(line[i]);
         i++;

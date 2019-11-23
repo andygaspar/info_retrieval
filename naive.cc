@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <string>
+#include <string.h>
 #include <map>
 #include <iterator>
 #include <vector>
@@ -26,57 +27,61 @@ using std::vector;
 vector<int> index_ptr;
 char* chunk=nullptr;
 string file_name="../doc/doc_test_small.txt";
-string terms_list="terms_list.csv";
+string terms_list_TEMP="terms_list_TEMP.csv";
+string posting_list_TEMP="posting_list_TEMP.csv";
+
+ 
+string get_term_from_disk(int i);
 
 
-string term_from_disk(int i);
-
-// da sistemare il partition
 
 //vedere perché non funziona il term from disk con lo while e la spaziatura
 
   
 
-int partition (vector<int> &disk_index, int low, int high) 
-{ 
-    int pivot = disk_index[high];    // pivot 
-    int i = (low - 1);  // Index of smaller element 
-  
-    for (int j = low; j <= high-1; j++) 
-    { 
-        // If current element is smaller than or 
-        // equal to pivot 
-        if (term_from_disk(disk_index[j]) <= term_from_disk(disk_index[pivot]) ) 
-        { 
-            i++;    // increment index of smaller element 
-            std::iter_swap(disk_index.begin()+i, disk_index.begin()+high);  
-        } 
-    } 
-    std::iter_swap(disk_index.begin()+i + 1, disk_index.begin()+high); 
-    return (i + 1); 
-} 
+ //quick sort ***********************
+    int partition(vector<int> &disk_index,int first,int last) { 
+    
+        int i{first+1};
+        int j{last};
+        while(i<=j) {
 
-void quickSort(vector<int> &disk_index, int low, int high) 
-{ 
-    if (low < high) 
-    { 
-        /* pi is partitioning index, disk_index[p] is now 
-           at right place */
-        int pi = partition(disk_index, low, high); 
-  
-        // Separately sort elements before 
-        // partition and after partition 
-        quickSort(disk_index, low, pi - 1); 
-        quickSort(disk_index, pi + 1, high); 
-    } 
-} 
+            //the comparison is maid with the words written in the disk
+            if (get_term_from_disk(disk_index[i])>get_term_from_disk(disk_index[first])) 
+                {
+                    std::iter_swap(disk_index.begin()+i, disk_index.begin()+j);
+                    j--;
+                    }
+            else {
+                    i++;
+                }
+        }
+        std::iter_swap(disk_index.begin()+first, disk_index.begin()+j);
+        return j;
+    }
+
+    void quick_sort_rec(vector<int> &disk_index,int first, int last) {
+        if(first<last) {
+            int pivot{partition(disk_index,first,last)};
+            quick_sort_rec(disk_index,first,pivot-1);
+            quick_sort_rec(disk_index,pivot+1,last);
+        };
+    }
+
+    void quick_sort(vector<int> &disk_index) {
+        if (disk_index.size()>0) {
+            quick_sort_rec(disk_index,0,disk_index.size()-1);
+        }
+    }  
 
 
 
-vector<int> make_term_list (string file_name){
+
+
+vector<int> make_term_list_TEMP (string file_name){
     std::ifstream g{file_name};
-    std::ofstream save_term_toDisk{"terms_list.csv"};
-    std::ofstream save_posting_toDisk{"posting_list.csv"};
+    std::ofstream save_term_toDisk{terms_list_TEMP};
+    std::ofstream save_posting_toDisk{posting_list_TEMP};
 
 
     string line;
@@ -90,7 +95,7 @@ vector<int> make_term_list (string file_name){
         i = 0 ;
         while( i < line.length()) {
 
-            term=get_term(line,i); //get the terms starting from position i in line
+            term=get_term(line,i); //get the term starting from position i in line
 
             if ( is_valid_term(term)) { 
                 
@@ -115,7 +120,7 @@ vector<int> make_term_list (string file_name){
 
 
 
-string term_from_disk(int i){
+string get_term_from_disk(int i){
     string term="";
     while(chunk[i]!=' '){
         term+=chunk[i];
@@ -130,35 +135,44 @@ size_t getFilesize() {
     return st.st_size;
 }
 
-  
-// Driver program to test above functions 
-int main() 
-{ 
-  
-    index_ptr=make_term_list(file_name);
-     
-    
+char * set_disk_ptr() {
     size_t filesize = getFilesize();
-    int fd = open(terms_list.c_str(), O_RDONLY, 0);
+    int fd = open(terms_list_TEMP.c_str(), O_RDONLY, 0);
     assert(fd != -1);
     //Execute mmap
     void* mmappedData = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
     assert(mmappedData != MAP_FAILED);
 
-    chunk = reinterpret_cast<char*>(mmap(NULL, filesize, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0));
-    //void * adress=reinterpret_cast<void *> (&chunk[3]);
+   return reinterpret_cast<char*>(mmap(NULL, filesize, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0));
+  }
+// Driver program to test above functions 
+int main() 
+{ 
+  
+    index_ptr=make_term_list_TEMP(file_name);
+     
+    chunk=set_disk_ptr();
 
 
-    for (int i=0; i<20; i++) 
-    cout<<index_ptr[i]<<"  "<<term_from_disk(index_ptr[i])<<endl;
 
-    quickSort(index_ptr,0,index_ptr.size()-1);
 
-    for (int i=0; i<20; i++) 
-    cout<<index_ptr[i]<<"  "<<term_from_disk(index_ptr[i])<<endl;
+    quick_sort(index_ptr);
 
-    //remove("posting_list.csv");
-    //remove("terms_list.csv");
+
+
+    
+
+    std::ofstream lista("prova_list.csv");
+    //writing 
+    lista<<get_term_from_disk(index_ptr[0])<<endl;
+    for(int i=1; i< index_ptr.size(); i++) {
+        if(get_term_from_disk(index_ptr[i])!=get_term_from_disk(index_ptr[i-1]))
+            lista<<get_term_from_disk(index_ptr[i])<<endl;        
+    }
+
+    remove(terms_list_TEMP.c_str());
+    remove(posting_list_TEMP.c_str());
+
 
     return 0; 
 } 
