@@ -27,6 +27,9 @@ using std::vector;
 vector<int> index_ptr;
 char* chunk=nullptr;
 string file_name="../doc/doc_test_small.txt";
+
+string terms_list="terms_list.csv";
+string posting_list="posting_list.csv";
 string terms_list_TEMP="terms_list_TEMP.csv";
 string posting_list_TEMP="posting_list_TEMP.csv";
 
@@ -153,21 +156,23 @@ int main()
      
     chunk=set_disk_ptr();
 
-
-
-
     quick_sort(index_ptr);
+ 
 
+    std::ofstream ter_list(terms_list);
+    std::ofstream pos_list(posting_list);
+    string current="";
+    string prev="";
 
-
-    
-
-    std::ofstream lista("prova_list.csv");
     //writing 
-    lista<<get_term_from_disk(index_ptr[0])<<endl;
+    ter_list<<get_term_from_disk(index_ptr[0])<<endl;
+
     for(int i=1; i< index_ptr.size(); i++) {
-        if(get_term_from_disk(index_ptr[i])!=get_term_from_disk(index_ptr[i-1]))
-            lista<<get_term_from_disk(index_ptr[i])<<endl;        
+        current=get_term_from_disk(index_ptr[i]);
+        prev=get_term_from_disk(index_ptr[i-1]);
+
+        if(current!=prev)
+            ter_list<<current<<endl;        
     }
 
     remove(terms_list_TEMP.c_str());
