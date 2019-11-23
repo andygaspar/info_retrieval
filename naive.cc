@@ -27,6 +27,7 @@ using std::vector;
 vector<int> ter_index_ptr;
 vector<int> pos_index_ptr;
 char* text_ptr=nullptr;
+char* doc_ID_ptr=nullptr;
 string text_file_name="../doc/doc_test_small.txt";
 
 
@@ -45,37 +46,38 @@ string get_term_from_disk(int i);
   
 
  //quick sort ***********************
-    int partition(vector<int> &disk_index,int first,int last) { 
+    int partition(int first,int last) { 
     
         int i{first+1};
         int j{last};
         while(i<=j) {
 
             //the comparison is maid with the words written in the disk
-            if (get_term_from_disk(disk_index[i])>get_term_from_disk(disk_index[first])) 
+            if (get_term_from_disk(ter_index_ptr[i])>get_term_from_disk(ter_index_ptr[first])) 
                 {
-                    std::iter_swap(disk_index.begin()+i, disk_index.begin()+j);
+                    std::iter_swap(ter_index_ptr.begin()+i, ter_index_ptr.begin()+j);
+                    std::iter_swap(pos_index_ptr.begin()+i, pos_index_ptr.begin()+j);
                     j--;
                     }
             else {
                     i++;
                 }
         }
-        std::iter_swap(disk_index.begin()+first, disk_index.begin()+j);
+        std::iter_swap(ter_index_ptr.begin()+first, ter_index_ptr.begin()+j);
         return j;
     }
 
-    void quick_sort_rec(vector<int> &disk_index,int first, int last) {
+    void quick_sort_rec(int first, int last) {
         if(first<last) {
-            int pivot{partition(disk_index,first,last)};
-            quick_sort_rec(disk_index,first,pivot-1);
-            quick_sort_rec(disk_index,pivot+1,last);
+            int pivot{partition(first,last)};
+            quick_sort_rec(first,pivot-1);
+            quick_sort_rec(pivot+1,last);
         };
     }
 
-    void quick_sort(vector<int> &disk_index) {
-        if (disk_index.size()>0) {
-            quick_sort_rec(disk_index,0,disk_index.size()-1);
+    void quick_sort() {
+        if (ter_index_ptr.size()>0) {
+            quick_sort_rec(0,ter_index_ptr.size()-1);
         }
     }  
 
@@ -83,7 +85,7 @@ string get_term_from_disk(int i);
 
 
 
-vector<int> make_term_list_TEMP (string file_name){
+void make_term_list_TEMP (string file_name){
     std::ifstream g{file_name};
     std::ofstream save_term_toDisk{terms_list_TEMP};
     std::ofstream save_posting_toDisk{posting_list_TEMP};
@@ -92,8 +94,10 @@ vector<int> make_term_list_TEMP (string file_name){
     string line;
     string term = "";
     short int i;
-    long int doc_ID=1;
-    int disk_index=0;
+    int doc_ID=1;
+    string doc="1";
+    int ter_index=0;
+    int pos_index=0;
 
     
     while(getline(g,line)) {
@@ -105,10 +109,12 @@ vector<int> make_term_list_TEMP (string file_name){
             if ( is_valid_term(term)) { 
                 
                 save_term_toDisk<<term<<' ';
-                save_posting_toDisk<<doc_ID<<endl;
+                save_posting_toDisk<<std::to_string(doc_ID)<<' ';
 
-                ter_index_ptr.push_back(disk_index); //save term's beginnig index
-                disk_index+=term.length()+1;
+                ter_index_ptr.push_back(ter_index); //save term's beginnig index
+                pos_index_ptr.push_back(pos_index);
+                ter_index+=term.length()+1;
+                pos_index+=(std::to_string(doc_ID)).length()+1;
             }
 
             term="";           
@@ -116,11 +122,11 @@ vector<int> make_term_list_TEMP (string file_name){
         }
         term="";
         doc_ID++;
+
     }
 
     g.close();
 
-    return ter_index_ptr;
 } 
 
 
@@ -134,6 +140,15 @@ string get_term_from_disk(int i){
     return term;
 }
 
+string get_doc_ID_from_disk(int i){
+    string d_ID="";
+    while(doc_ID_ptr[i]!=' '){
+        d_ID+=doc_ID_ptr[i];
+        i++;
+    }
+    return d_ID;
+}
+
 size_t getFilesize(string &file_name) {
     struct stat st;
     stat(file_name.c_str(), &st);
@@ -144,11 +159,11 @@ size_t getFilesize(string &file_name) {
 template<class T>
 T * set_disk_ptr(string &file_name) {
     size_t filesize = getFilesize(file_name);
-    int fd = open(terms_list_TEMP.c_str(), O_RDONLY, 0);
+    int fd = open(file_name.c_str(), O_RDONLY, 0);
     assert(fd != -1);
-    //Execute mmap
+    /*
     void* mmappedData = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
-    assert(mmappedData != MAP_FAILED);
+    assert(mmappedData != MAP_FAILED);*/
 
    return reinterpret_cast<T*>(mmap(NULL, filesize, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0));
   }
@@ -159,11 +174,13 @@ int main()
 {   remove(terms_list.c_str());
     remove(posting_list.c_str());
   
-    ter_index_ptr=make_term_list_TEMP(text_file_name);
+    make_term_list_TEMP(text_file_name);
      
-    text_ptr=set_disk_ptr<char>(text_file_name);
+    text_ptr=set_disk_ptr<char>(terms_list_TEMP);
 
-    quick_sort(ter_index_ptr);
+    doc_ID_ptr=set_disk_ptr<char>(posting_list_TEMP);
+
+    quick_sort();
  
 
     std::ofstream ter_list(terms_list);
@@ -175,7 +192,7 @@ int main()
     string prev="";
 
     ter_list<<get_term_from_disk(ter_index_ptr[0]);
-    pos_list<<"0"<<endl;
+    pos_list<<get_doc_ID_from_disk(pos_index_ptr[0]);
 
     for(int i=1; i< ter_index_ptr.size(); i++) {
         current=get_term_from_disk(ter_index_ptr[i]);
@@ -183,15 +200,20 @@ int main()
 
         if(current!=prev){
             ter_list<<endl<<current;
-            pos_list<<endl<<ter_index_ptr[i];
+            pos_list<<endl<<get_doc_ID_from_disk(pos_index_ptr[i]);
+            //pos_list.write((const char*)&ter_index_ptr[i],sizeof(int));//488
         }
 
-        else {pos_list<<" "<<ter_index_ptr[i];}
+        else pos_list<<" "<<get_doc_ID_from_disk(pos_index_ptr[i]);
+        
 
     }
 
     remove(terms_list_TEMP.c_str());
     remove(posting_list_TEMP.c_str());
+
+
+
 
 
     return 0; 
