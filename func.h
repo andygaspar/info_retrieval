@@ -55,7 +55,7 @@ bool is_valid_term(string term){
 
 //get a term from a line starting from position i
 
-string get_term(string line, short int& i){
+string get_term(string line, long int& i){
     string term="";
     //std::locale loc;
     while(!isspace(line[i]) and !ispunct(line[i]) and i<line.length()) {
