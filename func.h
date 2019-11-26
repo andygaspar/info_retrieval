@@ -66,14 +66,6 @@ string get_term(string line, long int& i){
 }
 
 
-//check wether a term is already in a dict
-
-bool is_in_dict(string term,std::map<string, vector<long int>>& dictionary){
-    std::map<std::string, vector<long int>>::iterator invalid_key= dictionary.end();
-
-    if (dictionary.find(term) == invalid_key) return  false;
-    else return true;
-}
 
 
 //check wether an ID is already in a posting list
