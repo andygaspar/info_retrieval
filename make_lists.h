@@ -45,52 +45,42 @@ string posting_list_TEMP="posting_list_TEMP.csv";
 
  
 string get_term_from_disk(int i,char* ptr_to_disk);
+string get_doc_ID_from_disk(int i);
+void quick_sort();
+void make_term_list_TEMP (string file_name);
+int make_Ter_Posts();
+void make_ptr_to_terms_list(int num_terms);
+
+size_t getFilesize(string &file_name);
+template<class T>
+T * set_disk_ptr(string &file_name);
 
 
 
-//vedere perché non funziona il term from disk con lo while e la spaziatura
+void set_files() {
 
   
-
- //quick sort ***********************
-    int partition(int first,int last) { 
+    make_term_list_TEMP(text_file_name);
+     
+    text_ptr=set_disk_ptr<char>(terms_list_TEMP);
+    doc_ID_ptr=set_disk_ptr<char>(posting_list_TEMP);
     
-        int i{first+1};
-        int j{last};
-        while(i<=j) {
+    quick_sort();
+ 
+    int num_terms=make_Ter_Posts();
+    cout<<"****"<<num_terms<<endl;
 
-            //the comparison is maid with the words written in the disk
-            if (get_term_from_disk(ter_index_ptr[i],text_ptr)>get_term_from_disk(ter_index_ptr[first],text_ptr)) 
-                {
-                    std::iter_swap(ter_index_ptr.begin()+i, ter_index_ptr.begin()+j);
-                    std::iter_swap(pos_index_ptr.begin()+i, pos_index_ptr.begin()+j);
-                    j--;
-                    }
-            else {
-                    i++;
-                }
-        }
-        std::iter_swap(ter_index_ptr.begin()+first, ter_index_ptr.begin()+j);
-        std::iter_swap(pos_index_ptr.begin()+first, pos_index_ptr.begin()+j);
-        return j;
-    }
-
-    void quick_sort_rec(int first, int last) {
-        if(first<last) {
-            int pivot{partition(first,last)};
-            quick_sort_rec(first,pivot-1);
-            quick_sort_rec(pivot+1,last);
-        };
-    }
-
-    void quick_sort() {
-        if (ter_index_ptr.size()>0) {
-            quick_sort_rec(0,ter_index_ptr.size()-1);
-        }
-    }  
+    terms_ptr=set_disk_ptr<char>(terms_list);
+    make_ptr_to_terms_list(num_terms);
 
 
+    remove(terms_list_TEMP.c_str());
+    remove(posting_list_TEMP.c_str());
+    
+    
+} 
 
+  
 
 
 void make_term_list_TEMP (string file_name){
@@ -138,50 +128,6 @@ void make_term_list_TEMP (string file_name){
     save_posting_toDisk.close();
 
 } 
-
-
-
-string get_term_from_disk(int i, char* ptr_to_disk){
-    string term="";
-    while(ptr_to_disk[i]!=' '){
-        term+=ptr_to_disk[i];
-        i++;
-    }
-    return term;
-}
-
-string get_doc_ID_from_disk(int i){
-    string d_ID="";
-    while(doc_ID_ptr[i]!=' '){
-        d_ID+=doc_ID_ptr[i];
-        i++;
-    }
-    return d_ID;
-}
-
-size_t getFilesize(string &file_name) {
-    struct stat st;
-    stat(file_name.c_str(), &st);
-    return st.st_size;
-}
-
-
-template<class T>
-T * set_disk_ptr(string &file_name) {
-    size_t filesize = getFilesize(file_name);
-    int fd = open(file_name.c_str(), O_RDONLY, 0);
-    assert(fd != -1);
-    
-    //void* mmappedData = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
-    //assert(mmappedData != MAP_FAILED);
-
-    T* ptr=(T*)(mmap(NULL, filesize, PROT_READ,  MAP_SHARED, fd, 0));
-    if(ptr==MAP_FAILED) cout<<"problemi"<<endl;
-    return ptr;
-
-   //return reinterpret_cast<T*>(mmap(NULL, filesize, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0));
-}
-
 
 int make_Ter_Posts() {
 
@@ -254,26 +200,97 @@ void make_ptr_to_terms_list(int num_terms){
 }
 
 
-void set_files() {
 
-  
-    make_term_list_TEMP(text_file_name);
-     
-    text_ptr=set_disk_ptr<char>(terms_list_TEMP);
-    doc_ID_ptr=set_disk_ptr<char>(posting_list_TEMP);
+ //quick sort ***********************
+    int partition(int first,int last) { 
     
+        int i{first+1};
+        int j{last};
+        while(i<=j) {
 
-    quick_sort();
- 
-    int num_terms=make_Ter_Posts();
+            //the comparison is maid with the words written in the disk
+            if (get_term_from_disk(ter_index_ptr[i],text_ptr)>get_term_from_disk(ter_index_ptr[first],text_ptr)) 
+                {
+                    std::iter_swap(ter_index_ptr.begin()+i, ter_index_ptr.begin()+j);
+                    std::iter_swap(pos_index_ptr.begin()+i, pos_index_ptr.begin()+j);
+                    j--;
+                    }
+            else {
+                    i++;
+                }
+        }
+        std::iter_swap(ter_index_ptr.begin()+first, ter_index_ptr.begin()+j);
+        std::iter_swap(pos_index_ptr.begin()+first, pos_index_ptr.begin()+j);
+        return j;
+    }
 
-    terms_ptr=set_disk_ptr<char>(terms_list);
-    make_ptr_to_terms_list(num_terms);
+    void quick_sort_rec(int first, int last) {
+        if(first<last) {
+            int pivot{partition(first,last)};
+            quick_sort_rec(first,pivot-1);
+            quick_sort_rec(pivot+1,last);
+        };
+    }
+
+    void quick_sort() {
+        if (ter_index_ptr.size()>0) {
+            quick_sort_rec(0,ter_index_ptr.size()-1);
+        }
+    }  
 
 
 
-    remove(terms_list_TEMP.c_str());
-    remove(posting_list_TEMP.c_str());
+
+
+
+
+
+
+string get_term_from_disk(int i, char* ptr_to_disk){
+    string term="";
+    while(ptr_to_disk[i]!=' '){
+        term+=ptr_to_disk[i];
+        i++;
+    }
+    return term;
+}
+
+string get_doc_ID_from_disk(int i){
+    string d_ID="";
+    while(doc_ID_ptr[i]!=' '){
+        d_ID+=doc_ID_ptr[i];
+        i++;
+    }
+    return d_ID;
+}
+
+size_t getFilesize(string &file_name) {
+    struct stat st;
+    stat(file_name.c_str(), &st);
+    return st.st_size;
+}
+
+
+template<class T>
+T * set_disk_ptr(string &file_name) {
+    size_t filesize = getFilesize(file_name);
+    int fd = open(file_name.c_str(), O_RDONLY, 0);
+    assert(fd != -1);
     
-    
-} 
+    //void* mmappedData = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
+    //assert(mmappedData != MAP_FAILED);
+
+    T* ptr=(T*)(mmap(NULL, filesize, PROT_READ,  MAP_SHARED, fd, 0));
+    if(ptr==MAP_FAILED) cout<<"problemi"<<endl;
+    return ptr;
+
+   //return reinterpret_cast<T*>(mmap(NULL, filesize, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0));
+}
+
+
+
+
+
+
+
+

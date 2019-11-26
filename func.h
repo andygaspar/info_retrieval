@@ -86,7 +86,13 @@ bool is_in_posting(long int doc_ID, vector<long int>& posting){
 }
 
 
-
-
+template<class T>
+std::ostream& operator<<(std::ostream& os, std::vector<T> v){
+    for(int i=0; i<v.size(); i++) {
+        os<<v[i]<<" ";
+    }
+    os<<endl;
+    return os;
+}
 
 
