@@ -3,7 +3,7 @@
 
 struct IR_front:IR{
         IR_front(): 
-            IR{"terms_list.csv","posting_list.csv","term_to_postings.csv","terms_map.csv"} {}
+            IR{} {}
         ~IR_front() {}
 
 
@@ -45,7 +45,6 @@ struct IR_front:IR{
 };
 
 int main(){
-    set_files();
 
     
 

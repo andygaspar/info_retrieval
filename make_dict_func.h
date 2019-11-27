@@ -1,34 +1,10 @@
-#include <algorithm>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <assert.h>
-#include <math.h>
-#include <bits/stdc++.h>
-#include "func.h" 
+
+#include "temp_variables.h" 
 
 
 
-//enviromental variables ********
-
-vector<int> ter_index_ptr;
-vector<int> pos_index_ptr;
-char* text_ptr=nullptr;
-int* doc_ID_ptr=nullptr;
-char* terms_ptr=nullptr;
-string text_file_name="../doc/doc_test_small.txt";
 
 
-string terms_list="terms_list.csv";
-string posting_list="posting_list.csv";
-string terms_map="terms_map.csv";
-string term_to_postings="term_to_postings.csv";
-
-string terms_list_TEMP="terms_list_TEMP.csv";
-string posting_list_TEMP="posting_list_TEMP.csv";
 
 
 
@@ -52,39 +28,39 @@ int sort_and_save_postings(vector<int> postings,std::ofstream &disk_ptr);
 
 
  //quick sort ***********************
-    int partition_file(int first,int last) { 
+    int partition_file(int first,int last,temp_variables& TEMP) { 
     
         int i{first+1};
         int j{last};
         while(i<=j) {
 
             //the comparison is maid with the words written in the disk
-            if (get_term_from_disk(ter_index_ptr[i],text_ptr)>get_term_from_disk(ter_index_ptr[first],text_ptr)) 
+            if (get_term_from_disk(TEMP.ter_index[i],TEMP.terms_ptr)>get_term_from_disk(TEMP.ter_index[first],TEMP.terms_ptr)) 
                 {
-                    std::iter_swap(ter_index_ptr.begin()+i, ter_index_ptr.begin()+j);
-                    std::iter_swap(pos_index_ptr.begin()+i, pos_index_ptr.begin()+j);
+                    std::iter_swap(TEMP.ter_index.begin()+i, TEMP.ter_index.begin()+j);
+                    std::iter_swap(TEMP.pos_index.begin()+i, TEMP.pos_index.begin()+j);
                     j--;
                     }
             else {
                     i++;
                 }
         }
-        std::iter_swap(ter_index_ptr.begin()+first, ter_index_ptr.begin()+j);
-        std::iter_swap(pos_index_ptr.begin()+first, pos_index_ptr.begin()+j);
+        std::iter_swap(TEMP.ter_index.begin()+first, TEMP.ter_index.begin()+j);
+        std::iter_swap(TEMP.pos_index.begin()+first, TEMP.pos_index.begin()+j);
         return j;
     }
 
-    void quick_sort_rec_file(int first, int last) {
+    void quick_sort_rec_file(int first, int last,temp_variables& TEMP) {
         if(first<last) {
-            int pivot{partition_file(first,last)};
-            quick_sort_rec_file(first,pivot-1);
-            quick_sort_rec_file(pivot+1,last);
+            int pivot{partition_file(first,last,TEMP)};
+            quick_sort_rec_file(first,pivot-1,TEMP);
+            quick_sort_rec_file(pivot+1,last,TEMP);
         };
     }
 
-    void quick_sort_file() {
-        if (ter_index_ptr.size()>0) {
-            quick_sort_rec_file(0,ter_index_ptr.size()-1);
+    void quick_sort_file(temp_variables& TEMP) {
+        if (TEMP.ter_index.size()>0) {
+            quick_sort_rec_file(0,TEMP.ter_index.size()-1,TEMP);
         }
     }  
 
@@ -104,16 +80,6 @@ string get_term_from_disk(int i, char* ptr_to_disk){
     }
     return term;
 }
-
-string get_doc_ID_from_disk(int i){
-    string d_ID="";
-    while(doc_ID_ptr[i]!=' '){
-        d_ID+=doc_ID_ptr[i];
-        i++;
-    }
-    return d_ID;
-}
-
 
 
 
@@ -144,7 +110,6 @@ T * set_disk_ptr(string &file_name) {
 
 
 
-  
 
 
 

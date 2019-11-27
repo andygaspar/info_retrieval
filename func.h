@@ -6,7 +6,17 @@
 #include <iterator>
 #include <vector>
 #include <ctype.h>
-#include <locale> 
+#include <locale>
+#include <algorithm>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <assert.h>
+#include <math.h>
+#include <bits/stdc++.h>
 
 using std::cout;
 using std::endl;
@@ -86,5 +96,7 @@ std::ostream& operator<<(std::ostream& os, std::vector<T> v){
     os<<endl;
     return os;
 }
+
+
 
 

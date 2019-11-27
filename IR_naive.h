@@ -4,7 +4,7 @@
 
 struct IR_naive:IR {
     IR_naive(): 
-        IR{"terms_list.csv","posting_list.csv","term_to_postings.csv","terms_map.csv"} {}
+        IR{} {}
     ~IR_naive() {}
 
     
