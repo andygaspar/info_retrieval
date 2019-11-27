@@ -28,7 +28,16 @@ struct RAM_map{
 
     range search_range(string t){
         int i=0;
-        int last=len-1;
+        int last=len-2;
+
+        if(t<terms_map[0]) {
+            perror("term not found");
+            exit(1);
+        }
+
+        if(t>terms_map[last]) return range(&indexes[last],last);
+
+
         while(!(t>=terms_map[i] and t<terms_map[i+1])) {
             if (t>=terms_map[last/2]) i=(i+last)/2;
             else last=(i+last)/2;
@@ -65,8 +74,49 @@ struct IR{
         }
     ~IR() {}
 
-    void compression();
-    vector<int> load_postings(int i);
-    string search(string term);
+    virtual void compression(int k=4) {}
+    virtual vector<int> search_word(string term) {}
+
+
+
+    virtual vector<int> load_postings(int index) {
+        int* ter_to_pos_ptr=set_disk_ptr<int>(term_to_postings_file);
+        int* disk_pos_ptr=set_disk_ptr<int>(posting_list_file);
+        vector<int> postings;
+
+        int i=ter_to_pos_ptr[index];
+        int end=ter_to_pos_ptr[index+1];
+
+        while(&disk_pos_ptr[i]!=&disk_pos_ptr[end]){
+            postings.push_back(disk_pos_ptr[i]);
+            i++;
+        }
+        return postings;
+    }
+
+    virtual vector<int> search(string a,string b,string CASE) {
+        vector<int> p_a=search_word(a);
+        vector<int> p_b=search_word(b);
+        vector<int> res;
+        int i=0;
+        int j=0;
+        while (i<p_a.size() and j<p_b.size()){
+            if(p_a[i]==p_b[j]) {
+                if (CASE=="OR" or CASE=="AND") res.push_back(p_a[i]);
+                i++;
+                j++;
+            }
+            else if(p_a[i]<p_b[j]) {
+                if (CASE=="OR" or CASE=="NOT") res.push_back(p_a[i]);
+                i++;
+            }
+            else {
+                if (CASE=="OR") res.push_back(p_b[j]);
+                j++;
+            }
+        }
+        return res;
+
+    }
 
 };

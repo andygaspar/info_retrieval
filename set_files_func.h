@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <assert.h>
 #include <math.h>
+#include <bits/stdc++.h>
 #include "func.h" 
 
 
@@ -37,12 +38,13 @@ string posting_list_TEMP="posting_list_TEMP.csv";
  
 string get_term_from_disk(int i,char* ptr_to_disk);
 string get_doc_ID_from_disk(int i);
-void quick_sort();
+void quick_sort_file();
 
 size_t getFilesize(string &file_name);
 template<class T>
 T * set_disk_ptr(string &file_name);
 
+int sort_and_save_postings(vector<int> postings,std::ofstream &disk_ptr);
 
 
 
@@ -140,6 +142,28 @@ T * set_disk_ptr(string &file_name) {
  
 }
 
+
+
+  
+
+
+
+int sort_and_save_postings(vector<int> postings,std::ofstream &disk_ptr) {
+    
+    if (postings.size()==0) return 0;
+
+    int counter=1;
+
+    sort(postings.begin(),postings.end());
+    disk_ptr.write((const char*)&postings[0],sizeof(int));
+    for(int i=1; i<postings.size();i++) {
+        if(postings[i]!=postings[i-1]) {
+            disk_ptr.write((const char*)&postings[i],sizeof(int));
+            counter++;
+        }
+    }
+    return counter;
+}
 
 
 

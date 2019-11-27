@@ -7,22 +7,9 @@ struct IR_naive:IR {
         IR{"terms_list.csv","posting_list.csv","term_to_postings.csv","terms_map.csv"} {}
     ~IR_naive() {}
 
-    vector<int> load_postings(int index) {
-        int* ter_to_pos_ptr=set_disk_ptr<int>(term_to_postings_file);
-        int* disk_pos_ptr=set_disk_ptr<int>(posting_list_file);
-        vector<int> postings;
+    
 
-        int i=ter_to_pos_ptr[index];
-        int end=ter_to_pos_ptr[index+1];
-
-        while(&disk_pos_ptr[i]!=&disk_pos_ptr[end]){
-            postings.push_back(disk_pos_ptr[i]);
-            i++;
-        }
-        return postings;
-    }
-
-    vector<int> search_word(string term){
+    vector<int> search_word(string term) override{
         range ran=map.search_range(term);
         int block_begin=*ran.ptr;
         ran.ptr++;
@@ -41,24 +28,15 @@ struct IR_naive:IR {
             else word+=terms_ptr[i];    
             i++;            
         }
+        if(i==block_end) {
+            perror("term__not found");
+            exit(1);
+        }
         vector<int> v=load_postings(ran.index*block_size+j);
         return v;
     }
 
+
+   
+
 };
-
-
-
-
-int main(){
-    set_files();
-
-    
-
-    IR_naive N;
-
-
-    cout<<N.search_word("l");
-    
-    
-}

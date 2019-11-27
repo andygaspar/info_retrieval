@@ -94,8 +94,10 @@ int make_Ter_Posts() {
 
     string current="";
     string prev="";
+    vector<int> postings;
     int doc_ID;
-    int terms_counter=1;
+    int terms_counter=0;
+    int index=0;
     
 
 
@@ -106,11 +108,12 @@ int make_Ter_Posts() {
         if(current!=prev){
             terms_counter++;
             save_term_toDisk<<current<<" ";
-            save_posting_toDisk.write((const char*)&doc_ID,sizeof(int));
-            save_tp_ptr_toDisk.write((const char*)&i,sizeof(int));
+            index+=sort_and_save_postings(postings,save_posting_toDisk);
+            save_tp_ptr_toDisk.write((const char*)&index,sizeof(int));
+            postings={doc_ID};
         }
 
-        else {save_posting_toDisk.write((const char*)&doc_ID,sizeof(int));}
+        else {postings.push_back(doc_ID);}
 
         prev=current;
 
@@ -118,6 +121,9 @@ int make_Ter_Posts() {
 
 
     //last element and file closure
+    sort_and_save_postings(postings,save_posting_toDisk);
+    index+=postings.size();
+    save_tp_ptr_toDisk.write((const char*)&index,sizeof(int));
 
     save_term_toDisk<<"#";
     save_term_toDisk.close();
@@ -151,6 +157,13 @@ void make_ptr_to_terms_list(int num_terms){
         terms_counter++;
         i+=term.length()+1;
     }
+
+    while(terms_ptr[i]!='#') {
+        i++;
+    }
+
+    t_p.write((const char*)&i,sizeof(int));
+
     t_p.close();
 
 }
