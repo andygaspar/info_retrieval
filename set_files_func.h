@@ -17,7 +17,7 @@
 vector<int> ter_index_ptr;
 vector<int> pos_index_ptr;
 char* text_ptr=nullptr;
-char* doc_ID_ptr=nullptr;
+int* doc_ID_ptr=nullptr;
 char* terms_ptr=nullptr;
 string text_file_name="../doc/doc_test_small.txt";
 

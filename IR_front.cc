@@ -150,7 +150,7 @@ g.close();
 
 
     IR_front M;
-    M.compression();
+    //M.compression();
 
     
 }

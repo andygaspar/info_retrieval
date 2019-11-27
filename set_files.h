@@ -20,7 +20,7 @@ void set_files() {
     make_term_list_TEMP(text_file_name);
      
     text_ptr=set_disk_ptr<char>(terms_list_TEMP);
-    doc_ID_ptr=set_disk_ptr<char>(posting_list_TEMP);
+    doc_ID_ptr=set_disk_ptr<int>(posting_list_TEMP);
     
     quick_sort_file();
  
@@ -39,7 +39,7 @@ void set_files() {
 
 
 void make_term_list_TEMP (string file_name){
-    std::ifstream g{file_name};
+    std::ifstream documents{file_name};
     std::ofstream save_term_toDisk{terms_list_TEMP};
     std::ofstream save_posting_toDisk{posting_list_TEMP};
 
@@ -49,11 +49,11 @@ void make_term_list_TEMP (string file_name){
     long int i;
     int doc_ID=1;
 
-    int ter_index=0;
-    int pos_index=0;
+    int ter_index=0;  //positional index of the TERM into file_temp
+    int pos_index=0;  //positional index of the POSTING into file_temp
 
     
-    while(getline(g,line)) {
+    while(getline(documents,line)) {
         i = 0 ;
         while( i < line.length()) {
 
@@ -62,12 +62,14 @@ void make_term_list_TEMP (string file_name){
             if ( is_valid_term(term)) { 
                 
                 save_term_toDisk<<term<<' ';
-                save_posting_toDisk<<std::to_string(doc_ID)<<' ';
+                //save_posting_toDisk<<std::to_string(doc_ID)<<' ';
+                save_posting_toDisk.write((const char*)&doc_ID,sizeof(int));
 
                 ter_index_ptr.push_back(ter_index); //save term's beginnig index
                 pos_index_ptr.push_back(pos_index);
                 ter_index+=term.length()+1;
-                pos_index+=(std::to_string(doc_ID)).length()+1;
+                //pos_index+=(std::to_string(doc_ID)).length()+1;
+                pos_index++;
             }
 
             term="";           
@@ -79,7 +81,7 @@ void make_term_list_TEMP (string file_name){
     }
 
 
-    g.close();
+    documents.close();
     save_term_toDisk.close();
     save_posting_toDisk.close();
 
@@ -103,7 +105,8 @@ int make_Ter_Posts() {
 
     for(int i=0; i< ter_index_ptr.size(); i++) {
         current=get_term_from_disk(ter_index_ptr[i],text_ptr);
-        doc_ID=std::atoi (get_doc_ID_from_disk(pos_index_ptr[i]).c_str());
+        //doc_ID=std::atoi (get_doc_ID_from_disk(pos_index_ptr[i]).c_str());
+        doc_ID=doc_ID_ptr[pos_index_ptr[i]];
 
         if(current!=prev){
             terms_counter++;
@@ -122,7 +125,8 @@ int make_Ter_Posts() {
 
     //last element and file closure
     sort_and_save_postings(postings,save_posting_toDisk);
-    index+=postings.size();
+    //index+=postings.size();
+    index++;
     save_tp_ptr_toDisk.write((const char*)&index,sizeof(int));
 
     save_term_toDisk<<"#";
