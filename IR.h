@@ -43,9 +43,8 @@ struct IR{
                 set_dictonary_files();
                 }
 
-            map_size=sqrt(getFilesize(term_to_postings_file)/sizeof(int));
+            
             terms_ptr=set_disk_ptr<char>(terms_file);
-            map=RAM_map(terms_map_file,terms_ptr);
             int* size=set_disk_ptr<int> (info_file);
             num_terms=*size;
         }
@@ -58,23 +57,7 @@ struct IR{
 
 
 
-    virtual vector<int> load_postings(int index) {
-
-
-        int* ter_to_pos_ptr=set_disk_ptr<int>(term_to_postings_file);
-        int* disk_pos_ptr=set_disk_ptr<int>(posting_list_file);
-        vector<int> postings;
-
-        int i=ter_to_pos_ptr[index];
-        int end=ter_to_pos_ptr[index+1];
-
-        while(&disk_pos_ptr[i]!=&disk_pos_ptr[end]){
-            postings.push_back(disk_pos_ptr[i]);
-            i++;
-        }
-        return postings;
-
-    }
+    virtual vector<int> load_postings(int index) {}
 
 
 
@@ -188,6 +171,9 @@ void IR::make_term_list_TEMP (temp_variables& TEMP){
 } 
 
 
+
+
+
 int IR::make_Ter_Posts(temp_variables& TEMP) {
 
     std::ofstream save_term_toDisk(terms_file);
@@ -242,6 +228,7 @@ int IR::make_Ter_Posts(temp_variables& TEMP) {
 }
 
 
+
 void IR::make_ptr_to_terms_list(){
 
 
@@ -251,13 +238,13 @@ void IR::make_ptr_to_terms_list(){
 
     string term="";
 
-    std::ofstream t_p(terms_map_file,std::ios::binary);
+    std::ofstream save_map(terms_map_file,std::ios::binary);
 
     while(terms_counter <= num_terms-size_map){
         term=get_term_from_disk(i,terms_ptr);
 
         if (terms_counter % size_map==0)  {
-            t_p.write((const char*)&i,sizeof(int));
+            save_map.write((const char*)&i,sizeof(int));
         }
         terms_counter++;
         i+=term.length()+1;
@@ -267,9 +254,9 @@ void IR::make_ptr_to_terms_list(){
         i++;
     }
 
-    t_p.write((const char*)&i,sizeof(int));
+    save_map.write((const char*)&i,sizeof(int));
 
-    t_p.close();
+    save_map.close();
 
 }
 

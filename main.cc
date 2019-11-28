@@ -9,6 +9,12 @@ int main(){
     cout<<N.search_word("l");
     cout<<N.search("l","a","NOT");
 
+    IR_front M;
+
+    cout<<"***"<<endl<<M.map.terms_map;
+    
+}
+
 /* 
     string file="pippo.csv";
     std::ofstream g(file, std::ios::binary);
@@ -85,12 +91,7 @@ g.close();
     cout<<term<<endl;
 */
 
-    IR_front M;
-    M.compression();
 
-
-    
-}
 
 
 /*    u_char to_byte(u_char len, u_char shared) {

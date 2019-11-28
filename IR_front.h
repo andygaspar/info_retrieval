@@ -12,6 +12,11 @@ struct IR_front:IR{
             IR{},block_size{k} {
                 terms_file_compressed = "storage/dict_compressed.csv";
                 terms_comp_ptr = nullptr;
+                compression();
+                terms_map_file="terms_map_comp.csv";
+                
+                map=RAM_map(terms_map_file,terms_comp_ptr);
+                map_size=sqrt(getFilesize(terms_map_file)/sizeof(u_char*));
             }
         ~IR_front() {}
 
@@ -30,7 +35,6 @@ struct IR_front:IR{
         }
 
         void compress_and_write(vector<string> block,std::ofstream &save_to_disk) {
-            //std::ofstream save_to_disk(terms_file_compressed, std::ios::binary);
 
             string suffix="";
             u_char prefix=0;
@@ -56,7 +60,6 @@ struct IR_front:IR{
                 suffix="";
                 prefix=0;
             }
-            cout<<endl;
 
             
         }
@@ -120,10 +123,17 @@ struct IR_front:IR{
             int block_terms_counter=0;
             vector<string> block;
             int i=0;
+            std::ofstream save_map("terms_map_comp.csv",std::ios::binary);
+            map_size=sqrt(num_terms/block_size);
+
             while (i < num_terms) {
                 block=read_block(ptr,i);
+
+                if(i%map_size==0) save_map.write((const char*)&ptr,sizeof(u_char*));
                 i+=block_size;
             }
+            save_map.write((const char*)&ptr,sizeof(u_char*));
+            save_map.close();
         }
 
 
@@ -137,14 +147,54 @@ struct IR_front:IR{
                 compress_and_write(block,save_to_disk);
                 cout<<block;
             }
+
+                        //questa è da controllare
+            u_char end=0;
+            save_to_disk.write((const char*)&(end),sizeof(u_char));
             save_to_disk.close();
 
             terms_comp_ptr=set_disk_ptr<u_char>(file);
 
-            set_indeces(terms_comp_ptr);        
+            set_indeces(terms_comp_ptr);      
+
+            save_to_disk.close();  
 
 
         }
+
+
+
+        vector<int> search_word(string term) override{
+
+        
+            range range_term=map.search_range(term);
+            int block_begin=*range_term.ptr;
+            range_term.ptr++;
+            int block_end=*(range_term.ptr);
+            string word="";
+
+
+            int i=block_begin;
+            int j=-1;
+            bool found=false;
+
+            while(i<block_end and found==false){
+                
+                if (terms_ptr[i]==' ') {
+                    j++;
+                    if (word==term) found=true;
+                    word="";
+                }      
+                else word+=terms_ptr[i];    
+                i++;            
+            }
+            if(i==block_end) {
+                perror("term__not found");
+                exit(1);
+            }
+            vector<int> v=load_postings(range_term.index*map_size+j);
+            return v;
+    }
 
 
 };

@@ -14,6 +14,7 @@ struct range{
 struct RAM_map{
     vector<string> terms_map;
     vector<int> indexes;
+    vector<u_char*> terms_comp_adrss;
     int len;
 
     RAM_map() {}
@@ -27,7 +28,39 @@ struct RAM_map{
             terms_map.push_back(get_term_from_disk(p[i],terms_ptr));
             indexes.push_back(p[i]);
         }
+
+    
     }
+
+ 
+    RAM_map(string& terms_map_file, u_char* terms_ptr)   {
+        
+        len=getFilesize(terms_map_file)/sizeof(u_char*);
+        u_char term_len;
+        u_char** term_adrss=set_disk_ptr<u_char*>(terms_map_file);
+        u_char* ptr; 
+        char* term_ptr;
+        string term="";
+
+        for (int i=0; i<len; i++) {
+            ptr= *term_adrss;
+            terms_comp_adrss.push_back(ptr);
+            term_len=*ptr;
+            ptr++;
+            term_ptr=reinterpret_cast<char*>(ptr);
+
+            for(int j=0;j<term_len;j++){
+                term+=*term_ptr;
+                term_ptr++;
+            }
+            
+            terms_map.push_back(term);
+            term="";
+            term_adrss++;
+        }
+    }
+ 
+    
     ~RAM_map() {}
 
     range search_range(string t){

@@ -1,6 +1,8 @@
 #include "func.h"
 
 
+
+
 struct temp_variables{
     string terms_list;
     string posting_list;

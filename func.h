@@ -50,6 +50,9 @@ string load_invalid_char(){
     return invalid_chars;
 }
 
+
+
+
 // check validity of a term
 
 bool is_valid_term(string term){
@@ -61,6 +64,9 @@ bool is_valid_term(string term){
 
     return true;
 }
+
+
+
 
 
 //get a term from a line starting from position i
@@ -86,6 +92,9 @@ bool is_in_posting(long int doc_ID, vector<long int>& posting){
     }
     return false;
 }
+
+
+
 
 
 template<class T>
