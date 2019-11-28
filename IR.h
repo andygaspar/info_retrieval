@@ -11,14 +11,16 @@ struct IR{
     string posting_list_file;
     string term_to_postings_file;
     string terms_map_file;
+    string info_file;
     int num_terms;
-    int block_size;
+    int map_size;
+    
 
     char* terms_ptr;
     RAM_map map;
 
 
-    bool files_present();
+    bool files_not_present();
 
     void make_term_list_TEMP (temp_variables& TEMP);
     int make_Ter_Posts(temp_variables& TEMP);
@@ -31,22 +33,27 @@ struct IR{
     IR() {
 
             documents_file         ="../doc/doc_test_small.txt";
-            terms_file             ="terms_list.csv";
-            posting_list_file      ="posting_list.csv";
-            term_to_postings_file  ="term_to_postings.csv";
-            terms_map_file         ="terms_map.csv";
+            terms_file             ="storage/terms_list.csv";
+            posting_list_file      ="storage/posting_list.csv";
+            term_to_postings_file  ="storage/term_to_postings.csv";
+            terms_map_file         ="storage/terms_map.csv";
+            info_file              ="storage/info.csv";
 
-            if (!files_present()) set_dictonary_files();
+            if (files_not_present()) {
+                set_dictonary_files();
+                }
 
-            block_size=sqrt(getFilesize(term_to_postings_file)/sizeof(int));
+            map_size=sqrt(getFilesize(term_to_postings_file)/sizeof(int));
             terms_ptr=set_disk_ptr<char>(terms_file);
             map=RAM_map(terms_map_file,terms_ptr);
+            int* size=set_disk_ptr<int> (info_file);
+            num_terms=*size;
         }
 
 
     ~IR() {}
 
-    virtual void compression(int k=4) {}
+    virtual void compression() {}
     virtual vector<int> search_word(string term) {}
 
 
@@ -75,27 +82,27 @@ struct IR{
     virtual vector<int> search(string a,string b,string CASE) {
 
 
-        vector<int> p_a=search_word(a);
-        vector<int> p_b=search_word(b);
-        vector<int> res;
+        vector<int> postings_a=search_word(a);
+        vector<int> postings_b=search_word(b);
+        vector<int> result;
         int i=0;
         int j=0;
-        while (i<p_a.size() and j<p_b.size()){
-            if(p_a[i]==p_b[j]) {
-                if (CASE=="OR" or CASE=="AND") res.push_back(p_a[i]);
+        while (i<postings_a.size() and j<postings_b.size()){
+            if(postings_a[i]==postings_b[j]) {
+                if (CASE=="OR" or CASE=="AND") result.push_back(postings_a[i]);
                 i++;
                 j++;
             }
-            else if(p_a[i]<p_b[j]) {
-                if (CASE=="OR" or CASE=="NOT") res.push_back(p_a[i]);
+            else if(postings_a[i]<postings_b[j]) {
+                if (CASE=="OR" or CASE=="NOT") result.push_back(postings_a[i]);
                 i++;
             }
             else {
-                if (CASE=="OR") res.push_back(p_b[j]);
+                if (CASE=="OR") result.push_back(postings_b[j]);
                 j++;
             }
         }
-        return res;
+        return result;
 
     }
 
@@ -122,7 +129,7 @@ void IR::set_dictonary_files() {
     
     quick_sort_file(TEMP);
 
-    num_terms=make_Ter_Posts(TEMP);
+    make_Ter_Posts(TEMP);
 
     terms_ptr=set_disk_ptr<char>(terms_file);
     make_ptr_to_terms_list();   
@@ -229,7 +236,9 @@ int IR::make_Ter_Posts(temp_variables& TEMP) {
     TEMP.ter_index.clear();
     TEMP.pos_index.clear();
 
-    return terms_counter;
+    num_terms=terms_counter;
+    std::ofstream save_size(info_file, std::ios::binary);
+    save_size.write((const char*)&num_terms,sizeof(int));
 }
 
 
@@ -269,12 +278,13 @@ void IR::make_ptr_to_terms_list(){
 
 
 
-inline bool IR::files_present () {
+inline bool IR::files_not_present () {
 
-    vector<string> all_files={documents_file,terms_file,posting_list_file,term_to_postings_file,terms_map_file};
+    vector<string> all_files={terms_file,posting_list_file,term_to_postings_file,terms_map_file,info_file};
     for(string file : all_files) {
-        if( access( documents_file.c_str(), F_OK ) != -1 ) return false;
+        std::ifstream exists(file);
+        if(!exists) return true;
     }
 
-    return true;
+    return false;
 }

@@ -74,6 +74,9 @@ int sort_and_save_postings(vector<int> postings,std::ofstream &disk_ptr);
 
 string get_term_from_disk(int i, char* ptr_to_disk){
     string term="";
+
+    if (ptr_to_disk[i]=='#') return "#";
+
     while(ptr_to_disk[i]!=' '){
         term+=ptr_to_disk[i];
         i++;
