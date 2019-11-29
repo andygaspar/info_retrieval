@@ -3,14 +3,6 @@
 
 
 
-struct range{
-    int* ptr;
-    int index;
-
-    range(int* p,int i): ptr{p}, index{i} {}
-    ~range() {}
-};
-
 struct RAM_map{
     vector<string> terms_map;
     vector<int> indexes;
@@ -63,7 +55,7 @@ struct RAM_map{
     
     ~RAM_map() {}
 
-    range search_range(string t){
+    int search_range(string t){
         int i=0;
         int last=len-2;
 
@@ -72,7 +64,7 @@ struct RAM_map{
             exit(1);
         }
 
-        if(t>terms_map[last]) return range(&indexes[last],last);
+        if(t>terms_map[last]) return last;
 
 
         while(!(t>=terms_map[i] and t<terms_map[i+1])) {
@@ -80,7 +72,7 @@ struct RAM_map{
             else last=(i+last)/2;
         }
 
-        return range(&indexes[i],i);
+        return i;
     }
 
 

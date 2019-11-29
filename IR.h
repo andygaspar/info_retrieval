@@ -57,7 +57,23 @@ struct IR{
 
 
 
-    virtual vector<int> load_postings(int index) {}
+    virtual vector<int> load_postings(int index) {
+
+
+        int* ter_to_pos_ptr=set_disk_ptr<int>(term_to_postings_file);
+        int* disk_pos_ptr=set_disk_ptr<int>(posting_list_file);
+        vector<int> postings;
+
+        int i=ter_to_pos_ptr[index];
+        int end=ter_to_pos_ptr[index+1];
+
+        while(&disk_pos_ptr[i]!=&disk_pos_ptr[end]){
+            postings.push_back(disk_pos_ptr[i]);
+            i++;
+        }
+        return postings;
+
+    }
 
 
 
@@ -223,6 +239,7 @@ int IR::make_Ter_Posts(temp_variables& TEMP) {
     TEMP.pos_index.clear();
 
     num_terms=terms_counter;
+    cout<<"************  "<<num_terms<<endl;
     std::ofstream save_size(info_file, std::ios::binary);
     save_size.write((const char*)&num_terms,sizeof(int));
 }

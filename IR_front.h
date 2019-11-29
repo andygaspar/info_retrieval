@@ -5,18 +5,22 @@ struct IR_front:IR{
 
         string terms_file_compressed;
         u_char* terms_comp_ptr;
+        int map_step_size;
+
+        string term_comp_TEMP;
 
         int block_size;
 
         IR_front(int k=4): 
             IR{},block_size{k} {
                 terms_file_compressed = "storage/dict_compressed.csv";
+                terms_map_file="storage/term_map_comp.csv";
                 terms_comp_ptr = nullptr;
                 compression();
-                terms_map_file="terms_map_comp.csv";
+
                 
                 map=RAM_map(terms_map_file,terms_comp_ptr);
-                map_size=sqrt(getFilesize(terms_map_file)/sizeof(u_char*));
+                map_size=getFilesize(terms_map_file)/sizeof(u_char*)-1;
             }
         ~IR_front() {}
 
@@ -108,7 +112,6 @@ struct IR_front:IR{
                 
             }
             ptr=reinterpret_cast<u_char*> (term_ptr);
-            cout<<block;
             return block;
         }
 
@@ -123,15 +126,17 @@ struct IR_front:IR{
             int block_terms_counter=0;
             vector<string> block;
             int i=0;
-            std::ofstream save_map("terms_map_comp.csv",std::ios::binary);
-            map_size=sqrt(num_terms/block_size);
+            std::ofstream save_map(terms_map_file,std::ios::binary);
+            map_step_size=(int(sqrt(num_terms))-int(sqrt(num_terms))%block_size);
+            map_size=num_terms/ map_step_size ;
 
             while (i < num_terms) {
+                if(i%map_step_size==0)  save_map.write((const char*)&ptr,sizeof(u_char*));
                 block=read_block(ptr,i);
 
-                if(i%map_size==0) save_map.write((const char*)&ptr,sizeof(u_char*));
                 i+=block_size;
             }
+
             save_map.write((const char*)&ptr,sizeof(u_char*));
             save_map.close();
         }
@@ -145,7 +150,6 @@ struct IR_front:IR{
             while (*terms_ptr!='#'){
                 block=get_k_terms(terms_ptr);
                 compress_and_write(block,save_to_disk);
-                cout<<block;
             }
 
                         //questa è da controllare
@@ -163,37 +167,30 @@ struct IR_front:IR{
         }
 
 
-
+ 
         vector<int> search_word(string term) override{
 
         
-            range range_term=map.search_range(term);
-            int block_begin=*range_term.ptr;
-            range_term.ptr++;
-            int block_end=*(range_term.ptr);
-            string word="";
+            int range_index=map.search_range(term);
+            u_char* ptr=map.terms_comp_adrss[range_index];
+            u_char* block_end=map.terms_comp_adrss[range_index+1];
+            int i=map_step_size  *  range_index;
+            vector<string> block;
+            vector<int> v;
 
-
-            int i=block_begin;
-            int j=-1;
-            bool found=false;
-
-            while(i<block_end and found==false){
+            while (i < num_terms   and  ptr!=block_end) {
+                block=read_block(ptr,i);
+                for(string t: block){
+                    
+                    if(t==term) return load_postings(i);
+                    i++;
+                    
+                }
                 
-                if (terms_ptr[i]==' ') {
-                    j++;
-                    if (word==term) found=true;
-                    word="";
-                }      
-                else word+=terms_ptr[i];    
-                i++;            
             }
-            if(i==block_end) {
-                perror("term__not found");
-                exit(1);
-            }
-            vector<int> v=load_postings(range_term.index*map_size+j);
-            return v;
+            perror("term__not found");
+            exit(1);
+            
     }
 
 

@@ -5,13 +5,17 @@ int main(){
     
 
     IR_naive N;
-
-    cout<<N.search_word("l");
+    cout<<"***"<<endl<<N.map.terms_map;
+    cout<<N.search_word("2");
     cout<<N.search("l","a","NOT");
+    cout<<N.search_word("voce");
 
     IR_front M;
 
     cout<<"***"<<endl<<M.map.terms_map;
+    cout<<M.search_word("2");
+    cout<<M.search("l","a","NOT");  
+    cout<<M.search_word("voce"); 
     
 }
 
