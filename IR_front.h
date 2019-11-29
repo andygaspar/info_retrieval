@@ -13,8 +13,8 @@ struct IR_front:IR{
 
         IR_front(int k=4): 
             IR{},block_size{k} {
-                terms_file_compressed = "storage/dict_compressed.csv";
-                terms_map_file="storage/term_map_comp.csv";
+                terms_file_compressed = "storage/front/dict_compressed.csv";
+                terms_map_file="storage/front/term_map_comp.csv";
                 terms_comp_ptr = nullptr;
                 compression();
 

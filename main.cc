@@ -1,4 +1,14 @@
-#include "IR_front.h"
+#include "IR_comp.h"
+
+void bin(unsigned n) 
+{ 
+    unsigned i; 
+    for (i = 1 << 31; i > 0; i = i / 2) 
+        (n & i)? printf("1"): printf("0"); 
+    cout<<endl;
+} 
+
+
 
 int main(){
 
@@ -16,6 +26,29 @@ int main(){
     cout<<M.search_word("2");
     cout<<M.search("l","a","NOT");  
     cout<<M.search_word("voce"); 
+
+
+    string file="pippo.csv";
+    std::ofstream g(file, std::ios::binary);
+
+    int num=300;
+    bin(num);
+    u_char second=(num>>8);
+    bin(second);
+    u_char first=num;
+    bin(first);
+    int finale= second;
+    bin(finale);
+    finale=finale<<8;
+    bin(finale);
+    finale=finale+first;
+    bin(finale);
+    cout<<finale<<endl;
+    //IR_comp C;
+
+
+
+
     
 }
 

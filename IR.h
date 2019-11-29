@@ -33,11 +33,11 @@ struct IR{
     IR() {
 
             documents_file         ="../doc/doc_test_small.txt";
-            terms_file             ="storage/terms_list.csv";
-            posting_list_file      ="storage/posting_list.csv";
-            term_to_postings_file  ="storage/term_to_postings.csv";
-            terms_map_file         ="storage/terms_map.csv";
-            info_file              ="storage/info.csv";
+            terms_file             ="storage/naive/terms_list.csv";
+            posting_list_file      ="storage/naive/posting_list.csv";
+            term_to_postings_file  ="storage/naive/term_to_postings.csv";
+            terms_map_file         ="storage/naive/terms_map.csv";
+            info_file              ="storage/info/info.csv";
 
             if (files_not_present()) {
                 set_dictonary_files();

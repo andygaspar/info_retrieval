@@ -64,11 +64,11 @@ struct RAM_map{
             exit(1);
         }
 
-        if(t>terms_map[last]) return last;
+        if(t>=terms_map[last]) return last;
 
 
         while(!(t>=terms_map[i] and t<terms_map[i+1])) {
-            if (t>=terms_map[last/2]) i=(i+last)/2;
+            if (t>=terms_map[(i+last)/2]) i=(i+last)/2;
             else last=(i+last)/2;
         }
 
