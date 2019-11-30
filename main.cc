@@ -2,11 +2,83 @@
 
 void bin(unsigned n) 
 { 
+    int j=0;
     unsigned i; 
-    for (i = 1 << 31; i > 0; i = i / 2) 
+    for (i = 1 << 31; i > 0; i = i / 2) {
+        if (j%8==0) cout<<" ";
         (n & i)? printf("1"): printf("0"); 
+        j++;
+    }
     cout<<endl;
 } 
+
+u_char get_kth_byte(int num, int byte){
+
+}
+
+
+
+int compress_number(int num,std::ofstream& o){
+    if(num<128){
+        //simple conversion to u_char. num<128 guarantes already the last bit to be 0, so free to use
+        u_char byte_to_store = static_cast<u_char> (num);
+        o.write((const char*)&byte_to_store,sizeof(u_char));
+    }
+    else if (num<16384) {
+                
+        u_char byte_to_store=(u_char)(num);  //first byte
+        byte_to_store|=(1<<7);
+        o.write((const char*)&(byte_to_store),sizeof(u_char));
+        
+        byte_to_store=static_cast<u_char>((num>>7)); //second byte
+        o.write((const char*)&(byte_to_store),sizeof(u_char));
+    }
+    else if(num<4194303){
+
+        u_char byte_to_store=(u_char)(num);  //first byte
+        byte_to_store|=(1<<7);
+        o.write((const char*)&(byte_to_store),sizeof(u_char));
+
+        byte_to_store=static_cast<u_char>((num>>7)); //second byte
+        byte_to_store|=(1 << 7);
+        o.write((const char*)&(byte_to_store),sizeof(u_char));
+
+        byte_to_store=static_cast<u_char>((num>>14)); //third byte
+        o.write((const char*)&(byte_to_store),sizeof(u_char));
+
+
+    }
+        
+}
+
+
+    int uncompress_number(u_char* &ptr) {
+
+        int num;
+        int byte=*ptr;
+        ptr++; //sposta il pointer al prossimo numero o byte del numero
+        if(!(byte & (1<<7))) return byte;
+
+        num=byte;
+        byte=*ptr;
+        ptr++; //sposta il pointer al prossimo numero o byte del numero
+        if(!(byte & (1<<7))) return num-(1<<7)+(byte<<7);
+    
+        byte-=(1<<7);
+        num-=(1<<7)-(byte<<7);
+        byte=*ptr;
+        ptr++;  //sposta il pointer al prossimo numero
+        return num+(byte<<14);
+
+    }
+
+    //(n & (1 << (k - 1))) 
+
+        //2147483647  int 
+    //32767       short int
+    //255         u_char
+
+
 
 
 
@@ -14,7 +86,48 @@ int main(){
 
     
 
-    IR_naive N;
+
+
+    string file="pippo.csv";
+    std::ofstream g(file, std::ios::binary);
+
+    int N=200000;
+        
+
+    for (int i=0;i<N;i++) compress_number(i,g); 
+    g.close();
+    u_char* ptr=set_disk_ptr<u_char> (file);  
+
+    int unc;
+
+    //IR_comp C;
+    for (int i=0;i<N;i++){
+        if(i%1000==0) cout<<i<<endl;
+        unc=uncompress_number(ptr);
+        if(i!=unc) cout<<"errore in "<<i<<"  "<<unc<<endl; 
+    }
+    remove(file.c_str());
+
+ /*  
+    int limite=pow(2,10);
+    for(int j=2;j<33;j++) {
+        limite=pow(2,j)-1;
+        cout<<j<<"   "<<static_cast<unsigned>(limite)<<endl;
+    }
+ */ 
+
+
+
+    //2147483647  int 
+    //32767       short int
+    //255         u_char
+    
+    
+}
+
+/* 
+
+IR_naive N;
     cout<<"***"<<endl<<N.map.terms_map;
     cout<<N.search_word("2");
     cout<<N.search("l","a","NOT");
@@ -28,31 +141,21 @@ int main(){
     cout<<M.search_word("voce"); 
 
 
-    string file="pippo.csv";
-    std::ofstream g(file, std::ios::binary);
-
-    int num=300;
-    bin(num);
-    u_char second=(num>>8);
-    bin(second);
-    u_char first=num;
-    bin(first);
-    int finale= second;
-    bin(finale);
-    finale=finale<<8;
-    bin(finale);
-    finale=finale+first;
-    bin(finale);
-    cout<<finale<<endl;
-    //IR_comp C;
 
 
 
 
-    
-}
 
-/* 
+
+
+
+
+
+
+
+
+
+
     string file="pippo.csv";
     std::ofstream g(file, std::ios::binary);
     u_char i=5;

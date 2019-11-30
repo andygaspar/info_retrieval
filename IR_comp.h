@@ -18,8 +18,12 @@ struct IR_comp:IR_front{
 
         for(int i=0; i<num_terms;i++) {
             v=load_postings(i);
-            for (int j=1;j<v.size();j++) v[j]-=v[j-1];
-            cout<<i<<" :  "<<num_terms<<"  "<<v;
+            //cout<<v;
+            for (int j=v.size();j>0;j--) v[j]-=v[j-1];
+            //cout<<v;
+            for (int j=1;j<v.size();j++) v[j]+=v[j-1];
+            //cout<<v;
+            //cout<<i<<" :  "<<num_terms<<"  "<<v;
         }
     }
     

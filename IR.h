@@ -17,6 +17,8 @@ struct IR{
     
 
     char* terms_ptr;
+    int* ter_to_pos_ptr;
+    int* disk_pos_ptr;
     RAM_map map;
 
 
@@ -43,10 +45,13 @@ struct IR{
                 set_dictonary_files();
                 }
 
-            
-            terms_ptr=set_disk_ptr<char>(terms_file);
-            int* size=set_disk_ptr<int> (info_file);
-            num_terms=*size;
+            else{
+                terms_ptr=set_disk_ptr<char>(terms_file);
+                ter_to_pos_ptr=set_disk_ptr<int>(term_to_postings_file);
+                disk_pos_ptr=set_disk_ptr<int>(posting_list_file);
+                int* size=set_disk_ptr<int> (info_file);
+                num_terms=*size;
+            }
         }
 
 
@@ -60,8 +65,6 @@ struct IR{
     virtual vector<int> load_postings(int index) {
 
 
-        int* ter_to_pos_ptr=set_disk_ptr<int>(term_to_postings_file);
-        int* disk_pos_ptr=set_disk_ptr<int>(posting_list_file);
         vector<int> postings;
 
         int i=ter_to_pos_ptr[index];
@@ -132,6 +135,9 @@ void IR::set_dictonary_files() {
 
     terms_ptr=set_disk_ptr<char>(terms_file);
     make_ptr_to_terms_list();   
+
+    ter_to_pos_ptr=set_disk_ptr<int>(term_to_postings_file);
+    disk_pos_ptr=set_disk_ptr<int>(posting_list_file);
     
 } 
 
