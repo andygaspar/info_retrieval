@@ -1,5 +1,44 @@
 #include "IR_comp.h"
 
+
+void bin(unsigned n) ;
+
+
+int main(){
+
+
+    cout<<"Naive"<<endl;
+    IR_naive N;
+    //cout<<N.search_word("2");
+    //cout<<N.search("l","a","NOT");
+    cout<<N.search_word("voce");
+
+
+    cout<<endl<<"Front"<<endl;
+    IR_front M;
+    //cout<<M.search_word("2");
+    //cout<<M.search("l","a","NOT");  
+    cout<<M.search_word("voce"); 
+    cout<<M.search_word("casa");
+    cout<<M.search_word("zapoteca");
+cout<<M.search_word("uccellina");
+    cout<<endl<<"Comp"<<endl;
+    IR_comp C;
+    //cout<<C.search_word("2");
+    //cout<<C.search("l","a","NOT"); 
+    cout<<C.search_word("voce"); 
+    cout<<C.search_word("casa");
+    cout<<C.search_word("zapoteca");
+cout<<C.search_word("uccellina");  
+
+    
+}
+
+
+
+
+
+
 void bin(unsigned n) 
 { 
     int j=0;
@@ -11,55 +50,3 @@ void bin(unsigned n)
     }
     cout<<endl;
 } 
-
-u_char get_kth_byte(int num, int byte){
-
-}
-
-
-
-
-
-
-    
-
-    //(n & (1 << (k - 1))) 
-
-        //2147483647  int 
-    //32767       short int
-    //255         u_char
-
-
-
-
-
-int main(){
-
-
-    cout<<"Naive"<<endl;
-    IR_naive N;
-    //cout<<"***"<<endl<<N.map.terms_map;
-    cout<<N.search_word("2");
-    cout<<N.search("l","a","NOT");
-    cout<<N.search_word("voce");
-
-    IR_front M;
-
-
-    cout<<endl<<"Front"<<endl;
-    //cout<<"***"<<endl<<M.map.terms_map;
-    cout<<M.search_word("2");
-    cout<<M.search("l","a","NOT");  
-    cout<<M.search_word("voce"); 
-
-
-
-    cout<<endl<<"Comp"<<endl;
-    IR_comp C;
-    cout<<C.search_word("2");
-    cout<<C.search("l","a","NOT");  
-    cout<<C.search_word("voce"); 
-  
-
-    
-}

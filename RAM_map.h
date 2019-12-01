@@ -6,7 +6,7 @@
 struct RAM_map{
     vector<string> terms_map;
     vector<int> indexes;
-    vector<u_char*> terms_comp_adrss;
+    //vector<u_char*> terms_comp_adrss;
     int len;
 
     RAM_map() {}
@@ -25,22 +25,25 @@ struct RAM_map{
     }
 
  
-    RAM_map(string& terms_map_file)   {
+    RAM_map(string& terms_map_file,u_char* terms_comp_ptr)   {
         
-        len=getFilesize(terms_map_file)/sizeof(u_char*);
+        len=getFilesize(terms_map_file)/sizeof(int); //number of elements of map
         u_char term_len;
-        u_char** term_adrss=set_disk_ptr<u_char*>(terms_map_file);
-        u_char* ptr; 
+        int* term_index=set_disk_ptr<int>(terms_map_file);
+ 
         char* term_ptr;
         string term="";
 
         for (int i=0; i<len; i++) {
-            ptr= *term_adrss;
-            terms_comp_adrss.push_back(ptr);
-            term_len=*ptr;
-            ptr++;
-            term_ptr=reinterpret_cast<char*>(ptr);
 
+            indexes.push_back(term_index[i]);
+            term_len=terms_comp_ptr[term_index[i]];
+
+            //the actual term's begin is one step ahead
+            term_ptr=reinterpret_cast<char*>(& terms_comp_ptr[term_index[i]]);
+            term_ptr++;
+
+            //getting the term
             for(int j=0;j<term_len;j++){
                 term+=*term_ptr;
                 term_ptr++;
@@ -48,7 +51,6 @@ struct RAM_map{
             
             terms_map.push_back(term);
             term="";
-            term_adrss++;
         }
     }
  

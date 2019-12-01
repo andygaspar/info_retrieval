@@ -15,25 +15,24 @@ struct IR_front:IR{
             IR{},block_size{k} {
                 terms_comp_file = "storage/front/dict_compressed.csv";
                 terms_map_file="storage/front/term_map_comp.csv";
-                terms_comp_ptr = nullptr;
+                map_step_size=(int(sqrt(num_terms))-int(sqrt(num_terms))%block_size);
+                map_size=num_terms/ map_step_size ;
 
                 vector<string> all_files={terms_comp_file};
                 if(files_not_present(all_files)) compression();
-                //compression();
+                else terms_comp_ptr=set_disk_ptr<u_char>(terms_comp_file);
 
-                
-                    terms_comp_ptr=set_disk_ptr<u_char>(terms_comp_file);
-                    map_step_size=(int(sqrt(num_terms))-int(sqrt(num_terms))%block_size);
-                    map_size=num_terms/ map_step_size ;
-                
-                map=RAM_map(terms_map_file);
-                map_size=getFilesize(terms_map_file)/sizeof(u_char*)-1;
+                map=RAM_map(terms_map_file,terms_comp_ptr);
+                map_size=getFilesize(terms_map_file)/sizeof(u_char*)-1;//the last is just a end of file index
             }
+
         ~IR_front() {}
 
 
+
+        // get a block of k terms from uncompressed dictionary made by IR 
         vector<string> get_k_terms(char* &terms_ptr){
-            vector<string> block;  //forse meglio block={} e passare &block
+            vector<string> block;  
             string term="";
             int i=0;
             while( i< block_size  and  *terms_ptr!='#'){
@@ -45,15 +44,20 @@ struct IR_front:IR{
             return block;
         }
 
-        void compress_and_write(vector<string> block,std::ofstream &save_to_disk) {
+
+
+
+        void compress_and_write(vector<string> block,std::ofstream &save_term_to_disk, int &map_index) {
 
             string suffix="";
             u_char prefix=0;
+
+            //writing first term's length and writing term
             u_char len=block[0].length();
+            save_term_to_disk.write((const char*)&len,sizeof(u_char));
+            save_term_to_disk<<block[0];
 
-
-            save_to_disk.write((const char*)&len,sizeof(u_char));
-            save_to_disk<<block[0];
+            map_index+=1+block[0].length();
 
             for(int i=1; i<block.size(); i++) {
                 while(block[i-1][prefix]==block[i][prefix]) prefix++;
@@ -65,15 +69,20 @@ struct IR_front:IR{
                     len++;
                 }
 
-                save_to_disk.write((const char*)&len,sizeof(u_char));
-                save_to_disk.write((const char*)&prefix,sizeof(u_char));
-                save_to_disk<<suffix;
+                save_term_to_disk.write((const char*)&len,sizeof(u_char));
+                save_term_to_disk.write((const char*)&prefix,sizeof(u_char));
+                save_term_to_disk<<suffix;
+
+                map_index+= 2 + suffix.length();
                 suffix="";
                 prefix=0;
             }
 
             
         }
+
+
+
 
         vector<string> read_block(u_char* &ptr, int i){
             vector<string> block;
@@ -124,54 +133,45 @@ struct IR_front:IR{
 
 
 
-                
-            
-        
-
-        void set_indeces(u_char* ptr){
-            int terms_counter=0;
-            int block_terms_counter=0;
-            vector<string> block;
-            int i=0;
-            std::ofstream save_map(terms_map_file,std::ios::binary);
-            map_step_size=(int(sqrt(num_terms))-int(sqrt(num_terms))%block_size);
-            map_size=num_terms/ map_step_size ;
-
-            while (i < num_terms) {
-                if(i%map_step_size==0)  save_map.write((const char*)&ptr,sizeof(u_char*));
-                block=read_block(ptr,i);
-
-                i+=block_size;
-            }
-
-            //save end file ptr (da controllare ***************************)
-            save_map.write((const char*)&ptr,sizeof(u_char*));
-            save_map.close();
-        }
-
 
         void compression() override {
-            std::ofstream save_to_disk(terms_comp_file, std::ios::binary);
+            std::ofstream save_term_toDisk(terms_comp_file, std::ios::binary);
+            std::ofstream seve_map_index_toDisk(terms_map_file,std::ios::binary);
             vector<string> block;
 
+            int map_index=0;
+            int terms_counter=0;
+
+            //seve_map_index_toDisk.write((const char*)&map_index,sizeof(int));
+
+
             while (*terms_ptr!='#'){
-                block=get_k_terms(terms_ptr);
-                compress_and_write(block,save_to_disk);
+
+                if(terms_counter % map_step_size  == 0 ) 
+                    seve_map_index_toDisk.write((const char*)&map_index,sizeof(int));
+  
+
+                //get_k_terms pushes forward terms_ptr
+                block=get_k_terms(terms_ptr);  
+
+                //map_index is increased by compress_and_block
+                compress_and_write(block,save_term_toDisk,map_index);
+                terms_counter+=block.size();
             }
 
-                        //questa è da controllare
+            
             u_char end=0;
-            save_to_disk.write((const char*)&(end),sizeof(u_char));
-            save_to_disk.close();
+            save_term_toDisk.write((const char*)&(end),sizeof(u_char));
+            save_term_toDisk.close();
+            seve_map_index_toDisk.write((const char*)&map_index,sizeof(int)); //last is already indexing last element
+            seve_map_index_toDisk.close();
 
             terms_comp_ptr=set_disk_ptr<u_char>(terms_comp_file);
-
-            set_indeces(terms_comp_ptr);      
-
-            save_to_disk.close();  
-
+   
 
         }
+
+
 
 
  
@@ -179,11 +179,10 @@ struct IR_front:IR{
 
         
             int range_index=map.search_range(term);
-            u_char* ptr=map.terms_comp_adrss[range_index];
-            u_char* block_end=map.terms_comp_adrss[range_index+1];
+            u_char* ptr       =   &terms_comp_ptr[map.indexes[range_index]];
+            u_char* block_end =   &terms_comp_ptr[map.indexes[range_index+1]];
             int i=map_step_size  *  range_index;
             vector<string> block;
-            vector<int> v;
 
             while (i < num_terms   and  ptr!=block_end) {
                 block=read_block(ptr,i);
