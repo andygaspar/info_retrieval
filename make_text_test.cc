@@ -17,6 +17,8 @@ int main(int argc, char* argv[]) {
     remove("storage/naive/term_to_postings.csv");
     remove("storage/naive/terms_list.csv");
     remove("storage/naive/terms_map.csv");
+    remove("storage/compressed/postings_list_comp.csv");
+    remove("storage/compressed/ter_to_pos_comp.csv");
     
     
     std::ifstream g{file_name};

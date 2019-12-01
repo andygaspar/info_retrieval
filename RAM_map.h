@@ -25,7 +25,7 @@ struct RAM_map{
     }
 
  
-    RAM_map(string& terms_map_file, u_char* terms_ptr)   {
+    RAM_map(string& terms_map_file)   {
         
         len=getFilesize(terms_map_file)/sizeof(u_char*);
         u_char term_len;

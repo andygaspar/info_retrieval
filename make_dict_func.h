@@ -105,7 +105,7 @@ T * set_disk_ptr(string &file_name) {
     //if(fd!=-1) cout<<std::strerror(errno);
     assert(fd !=-1);
 
-    T* ptr=(T*)(mmap(NULL, filesize, PROT_READ,  MAP_SHARED, fd, 0));
+    T* ptr=(T*)(mmap(NULL, filesize, PROT_READ , MAP_SHARED, fd, 0));
     if(ptr==MAP_FAILED) cout<<"problemi"<<endl;
     
     return ptr;

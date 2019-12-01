@@ -22,7 +22,7 @@ struct IR{
     RAM_map map;
 
 
-    bool files_not_present();
+    bool files_not_present(vector<string> all_files);
 
     void make_term_list_TEMP (temp_variables& TEMP);
     int make_Ter_Posts(temp_variables& TEMP);
@@ -41,9 +41,9 @@ struct IR{
             terms_map_file         ="storage/naive/terms_map.csv";
             info_file              ="storage/info/info.csv";
 
-            if (files_not_present()) {
-                set_dictonary_files();
-                }
+            vector<string> all_files={terms_file,posting_list_file,term_to_postings_file,terms_map_file,info_file};
+            if (files_not_present(all_files)) set_dictonary_files();
+                
 
             else{
                 terms_ptr=set_disk_ptr<char>(terms_file);
@@ -63,7 +63,6 @@ struct IR{
 
 
     virtual vector<int> load_postings(int index) {
-
 
         vector<int> postings;
 
@@ -288,9 +287,9 @@ void IR::make_ptr_to_terms_list(){
 
 
 
-inline bool IR::files_not_present () {
+inline bool IR::files_not_present (vector<string> all_files) {
 
-    vector<string> all_files={terms_file,posting_list_file,term_to_postings_file,terms_map_file,info_file};
+    
     for(string file : all_files) {
         std::ifstream exists(file);
         if(!exists) return true;

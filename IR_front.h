@@ -3,7 +3,7 @@
 
 struct IR_front:IR{
 
-        string terms_file_compressed;
+        string terms_comp_file;
         u_char* terms_comp_ptr;
         int map_step_size;
 
@@ -13,13 +13,20 @@ struct IR_front:IR{
 
         IR_front(int k=4): 
             IR{},block_size{k} {
-                terms_file_compressed = "storage/front/dict_compressed.csv";
+                terms_comp_file = "storage/front/dict_compressed.csv";
                 terms_map_file="storage/front/term_map_comp.csv";
                 terms_comp_ptr = nullptr;
-                compression();
+
+                vector<string> all_files={terms_comp_file};
+                if(files_not_present(all_files)) compression();
+                //compression();
 
                 
-                map=RAM_map(terms_map_file,terms_comp_ptr);
+                    terms_comp_ptr=set_disk_ptr<u_char>(terms_comp_file);
+                    map_step_size=(int(sqrt(num_terms))-int(sqrt(num_terms))%block_size);
+                    map_size=num_terms/ map_step_size ;
+                
+                map=RAM_map(terms_map_file);
                 map_size=getFilesize(terms_map_file)/sizeof(u_char*)-1;
             }
         ~IR_front() {}
@@ -137,14 +144,14 @@ struct IR_front:IR{
                 i+=block_size;
             }
 
+            //save end file ptr (da controllare ***************************)
             save_map.write((const char*)&ptr,sizeof(u_char*));
             save_map.close();
         }
 
 
         void compression() override {
-            string file=terms_file_compressed;
-            std::ofstream save_to_disk(file, std::ios::binary);
+            std::ofstream save_to_disk(terms_comp_file, std::ios::binary);
             vector<string> block;
 
             while (*terms_ptr!='#'){
@@ -157,7 +164,7 @@ struct IR_front:IR{
             save_to_disk.write((const char*)&(end),sizeof(u_char));
             save_to_disk.close();
 
-            terms_comp_ptr=set_disk_ptr<u_char>(file);
+            terms_comp_ptr=set_disk_ptr<u_char>(terms_comp_file);
 
             set_indeces(terms_comp_ptr);      
 
