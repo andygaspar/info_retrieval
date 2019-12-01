@@ -81,23 +81,20 @@ struct IR_comp:IR_front{
         vector<int> postings;
         
 
-        int i=ter_to_pos_ptr[index];
-        int end=ter_to_pos_ptr[index+1];
-
-        u_char* ptr=&postings_list_comp[i];
+        u_char* ptr=&postings_list_comp[ter_to_pos_ptr[index]];
+        u_char* end=&postings_list_comp[ter_to_pos_ptr[index+1]];
 
         //the first doesn't require any transformation
         int num=uncompress_number(ptr);
         postings.push_back(num);
-        i++;
 
         int j=1;
 
-        while(&disk_pos_ptr[i]!=&disk_pos_ptr[end]){
+        while(ptr!=end){
+            //ptr is moved forward by uncopress number
             num=uncompress_number(ptr);
             num+=postings[j-1];
             postings.push_back(num);
-            i++;
             j++;
         }
         return postings;

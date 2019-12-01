@@ -12,6 +12,7 @@ struct IR{
     string term_to_postings_file;
     string terms_map_file;
     string info_file;
+    int num_documents;
     int num_terms;
     int map_size;
     
@@ -49,8 +50,10 @@ struct IR{
                 terms_ptr=set_disk_ptr<char>(terms_file);
                 ter_to_pos_ptr=set_disk_ptr<int>(term_to_postings_file);
                 disk_pos_ptr=set_disk_ptr<int>(posting_list_file);
-                int* size=set_disk_ptr<int> (info_file);
+                int* seiz=set_disk_ptr<int> (info_file);
                 num_terms=*size;
+                size++;
+                num_documents=*size;
             }
         }
 
@@ -184,7 +187,7 @@ void IR::make_term_list_TEMP (temp_variables& TEMP){
 
     }
 
-
+    num_documents=doc_ID-1;
     documents.close();
     save_term_toDisk.close();
     save_posting_toDisk.close();
@@ -247,6 +250,8 @@ int IR::make_Ter_Posts(temp_variables& TEMP) {
     cout<<"************  "<<num_terms<<endl;
     std::ofstream save_size(info_file, std::ios::binary);
     save_size.write((const char*)&num_terms,sizeof(int));
+    save_size.write((const char*)&num_documents,sizeof(int));
+    save_size.close();
 }
 
 
